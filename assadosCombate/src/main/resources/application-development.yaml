@@ -1,0 +1,160 @@
+#file: noinspection SpellCheckingInspection,SpringBootApplicationYaml
+server:
+  port: 8888
+  servlet:
+    session:
+      persistent: false
+
+logging:
+  level:
+    root: INFO
+    org:
+      springframework:
+        transaction: TRACE
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+
+spring:
+  application:
+    name: assadosCombate
+
+  mvc:
+    static-path-pattern: /**
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+  # Spring Cache
+  cache:
+    type: redis
+
+  # Redis
+  data:
+    redis:
+      host: ${API_REDIS_HOST}
+      port: ${API_REDIS_PORT}
+      password: ${API_REDIS_PASSWORD}
+      database: ${API_REDIS_DB}
+      globalDatabase: ${API_REDIS_GLOBAL_DB}
+
+  # JPA
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+
+  # Database conf
+  datasource:
+    url: jdbc:postgresql://${API_DATABASE_HOST}:${API_DATABASE_PORT}/${API_DATABASE_DB}?currentSchema=${API_DATABASE_SCHEMA}
+    username: ${API_DATABASE_USERNAME}
+    password: ${API_DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # Liquibase conf
+  liquibase:
+    enabled: true
+    drop-first: false
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2KB
+      location: /tmp
+      max-file-size: 50MB
+      max-request-size: 75MB
+
+  # RabbitMQ
+  rabbitmq:
+    host: ${API_RABBITMQ_HOST}
+    port: ${API_RABBITMQ_PORT}
+    username: ${API_RABBITMQ_USERNAME}
+    password: ${API_RABBITMQ_PASSWORD}
+    listener:
+      simple:
+        retry:
+          enabled: true
+
+          ##After an interval of 3s the message should be retried.
+          initial-interval: 3s
+
+          ##Maximum 6 times the message should be retried.
+          ##It is then sent to the dead letter Queue.
+          max-attempts: 2
+
+          ##The maximum interval should not be more than 10s between two retries.
+          max-interval: 10s
+
+          ##The gap is multiplied by 2 between second repetition.
+          ## But the maximum interval can never be exceeded
+          multiplier: 2
+          ##So the retry interval values will be 3s, 6s, 10s, 10s, 10s. As 10 sec is the max interval specified.
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          sespSecurity:
+            connectTimeout: 5000
+            readTimeout: 5000
+
+springdoc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  api-docs:
+    groups:
+      enabled: true
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /api
+  show-actuator: true
+
+api:
+  queues:
+    logs:
+      exchange: assadosCombate
+      exchangeType: direct
+      exchangeDead: assadosCombate.dead
+      queue: com.assadosCombate.logs
+      queueDead: com.assadosCombate.logs.dead
+      routingKey: rk.com.assadosCombate.logs
+      routingKeyDead: rk.com.assadosCombate.logs.dead
+    email-recover:
+      exchange: assadosCombate
+      exchangeType: direct
+      exchangeDead: assadosCombate.dead
+      queue: assadosCombate.email.recover
+      queueDead: assadosCombate.email.recover.dead
+      routingKey: rk.assadosCombate.email.recover
+      routingKeyDead: rk.assadosCombate.email.recover.dead
+    email-password:
+      exchange: assadosCombate
+      exchangeType: direct
+      exchangeDead: assadosCombate.dead
+      queue: assadosCombate.email.password
+      queueDead: assadosCombate.email.password.dead
+      routingKey: rk.assadosCombate.email.password
+      routingKeyDead: rk.assadosCombate.email.password.dead
+
+  security:
+    token:
+      secret: ${JWT_SECRET:fba927a58b0952af9234be3b8a576b8f}
+      accessTokenExpiration: 2
+      refreshTokenExpiration: 8
+
+api-prefix: /api
+
+management:
+  endpoints:
+    web:
+      cors:
+        allowed-origins: http://localhost:5173
+        allowed-methods: GET
