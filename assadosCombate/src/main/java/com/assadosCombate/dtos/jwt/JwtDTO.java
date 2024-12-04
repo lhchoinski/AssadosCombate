@@ -1,6 +1,6 @@
 package com.assadosCombate.dtos.jwt;
 
-import com.assadosCombate.dtos.entities.UsuarioDTO;
+import com.assadosCombate.dtos.entities.UserDTO;
 import com.assadosCombate.dtos.groups.AppGroup;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Builder;
@@ -19,5 +19,5 @@ public class JwtDTO {
     private String refreshToken;
 
     @JsonView(AppGroup.Response.class)
-    private UsuarioDTO usuario;
+    private UserDTO usuario;
 }

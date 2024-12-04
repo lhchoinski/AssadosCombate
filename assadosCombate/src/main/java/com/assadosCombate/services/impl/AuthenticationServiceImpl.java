@@ -1,14 +1,14 @@
 package com.assadosCombate.services.impl;
 
-import com.assadosCombate.dtos.entities.UsuarioDTO;
+import com.assadosCombate.dtos.entities.UserDTO;
 import com.assadosCombate.dtos.jwt.JwtDTO;
 import com.assadosCombate.dtos.request.LoginRequestDTO;
-import com.assadosCombate.entities.Usuario;
+import com.assadosCombate.entities.User;
 import com.assadosCombate.exeptions.AuthenticationException;
 import com.assadosCombate.exeptions.BadRequestException;
-import com.assadosCombate.mappers.UsuarioMapper;
-import com.assadosCombate.repositories.UsuarioRepository;
-import com.assadosCombate.response.AuthenticatedUserDTO;
+import com.assadosCombate.mappers.UserMapper;
+import com.assadosCombate.repositories.UserRepository;
+import com.assadosCombate.dtos.response.AuthenticatedUserDTO;
 import com.assadosCombate.services.AuthenticationService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -46,22 +46,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Value("${api.security.token.refreshTokenExpiration}")
     private Integer timeExpirationRefreshToken;
 
-    private final UsuarioRepository usuarioRepository;
-    private final UsuarioMapper usuarioMapper;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Getter
-    private UsuarioDTO currentUserDTO = null;
+    private UserDTO currentUserDTO = null;
     @Getter
-    private Usuario currentUser = null;
+    private User currentUser = null;
 
     // Implementação de loadUserByUsername
     @Override
-    public Usuario loadUserByUsername(String login) throws AuthenticationException {
-        Usuario usuario = usuarioRepository.findByLogin(login);
-        if (usuario == null) {
+    public User loadUserByUsername(String login) throws AuthenticationException {
+        User user = userRepository.findByLogin(login);
+        if (user == null) {
             throw new AuthenticationException("Usuário inexistente ou senha inválida");
         }
-        return usuario;
+        return user;
     }
 
     // Implementação de getAuthenticatedUserDTO
@@ -82,7 +82,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public UsuarioDTO getAuthenticatedUser() {
+    public UserDTO getAuthenticatedUser() {
         loadAuthenticatedUser();
         if (currentUserDTO == null) {
             throw new BadCredentialsException("Token inválido");
@@ -99,7 +99,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         String username = authentication.getName();
-        Optional<Usuario> optionalUsuario = Optional.ofNullable(usuarioRepository.findByLogin(username));
+        Optional<User> optionalUsuario = Optional.ofNullable(userRepository.findByLogin(username));
 
         if (optionalUsuario.isPresent()) {
             currentUser = optionalUsuario.get();
@@ -107,31 +107,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    private UsuarioDTO compileByEntity(Usuario usuario) {
-        return usuarioMapper.toDto(usuario);
+    private UserDTO compileByEntity(User user) {
+        return userMapper.toDto(user);
     }
 
     @Override
     public JwtDTO getAccessToken(LoginRequestDTO loginRequestDTO) {
-        Usuario usuario = usuarioRepository.findByLogin(loginRequestDTO.getLogin());
-        if (usuario == null) {
+        User user = userRepository.findByLogin(loginRequestDTO.getLogin());
+        if (user == null) {
             throw new BadRequestException("Usuário não encontrado!");
         }
 
-        UsuarioDTO usuarioDTO = usuarioMapper.toDto(usuario);
+        UserDTO userDTO = userMapper.toDto(user);
         return JwtDTO.builder()
-                .accessToken(generateTokenJwt(usuario, timeExpirationToken))
-                .refreshToken(generateTokenJwt(usuario, timeExpirationRefreshToken))
-                .usuario(usuarioDTO)
+                .accessToken(generateTokenJwt(user, timeExpirationToken))
+                .refreshToken(generateTokenJwt(user, timeExpirationRefreshToken))
+                .usuario(userDTO)
                 .build();
     }
 
-    public String generateTokenJwt(Usuario usuario, Integer expiration) {
+    public String generateTokenJwt(User user, Integer expiration) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
             return JWT.create()
                     .withIssuer(ISSUER)
-                    .withSubject(usuario.getLogin())
+                    .withSubject(user.getLogin())
                     .withExpiresAt(generateExpirationDate(expiration))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
@@ -156,20 +156,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public JwtDTO getRefreshToken(String refreshToken) {
         String login = validateToken(refreshToken);
-        Usuario usuario = usuarioRepository.findByLogin(login);
-        if (usuario == null) {
+        User user = userRepository.findByLogin(login);
+        if (user == null) {
             throw new BadRequestException("Usuário não encontrado!");
         }
 
-        UsuarioDTO usuarioDTO = usuarioMapper.toDto(usuario);
+        UserDTO userDTO = userMapper.toDto(user);
 
-        var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
+        var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         return JwtDTO.builder()
-                .accessToken(generateTokenJwt(usuario, timeExpirationToken))
-                .refreshToken(generateTokenJwt(usuario, timeExpirationRefreshToken))
-                .usuario(usuarioDTO)
+                .accessToken(generateTokenJwt(user, timeExpirationToken))
+                .refreshToken(generateTokenJwt(user, timeExpirationRefreshToken))
+                .usuario(userDTO)
                 .build();
     }
 

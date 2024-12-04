@@ -1,7 +1,7 @@
 package com.assadosCombate.config.components.filters;
 
 import com.assadosCombate.constants.PublicRoutes;
-import com.assadosCombate.repositories.UsuarioRepository;
+import com.assadosCombate.repositories.UserRepository;
 import com.assadosCombate.services.impl.AuthenticationServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,7 +21,7 @@ import java.io.IOException;
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final AuthenticationServiceImpl authenticationServiceImpl;
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -45,7 +45,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         var login = authenticationServiceImpl.validateToken(token);
         if (login != null) {
-            UserDetails user = usuarioRepository.findByLogin(login);
+            UserDetails user = userRepository.findByLogin(login);
 
             if (user != null) {
                 var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());

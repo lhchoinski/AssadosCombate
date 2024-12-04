@@ -1,4 +1,4 @@
-package com.assadosCombate.response;
+package com.assadosCombate.dtos.response;
 
 import com.assadosCombate.dtos.groups.AppGroup;
 import com.fasterxml.jackson.annotation.JsonView;

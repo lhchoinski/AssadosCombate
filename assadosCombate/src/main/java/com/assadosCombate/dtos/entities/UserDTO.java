@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class UsuarioDTO implements Serializable {
+public class UserDTO implements Serializable {
 
     @JsonView({AppGroup.Response.class, AppGroup.ResponsePage.class})
     private UUID id;

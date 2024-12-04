@@ -1,4 +1,4 @@
-package com.assadosCombate.response;
+package com.assadosCombate.dtos.response;
 
 import lombok.Getter;
 import lombok.Setter;
